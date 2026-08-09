@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -12,7 +13,11 @@ import (
 var exitFunc = os.Exit
 
 func main() {
-	cfg, err := config.LoadConfig()
+	defaultConfigFilePath := config.DEFAULT_CONFIG_FILE_PATH
+	configFilePath := flag.String("conf", defaultConfigFilePath, "Path to proxy config file")
+	flag.Parse()
+
+	cfg, err := config.LoadConfig(*configFilePath)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)

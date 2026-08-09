@@ -7,14 +7,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	configFile = "config.yaml"
-)
-
 type Config struct {
-	ListenAddr  string    `yaml:"listen_addr"`
-	BackendAddr string    `yaml:"backend_addr"`
-	TLS         TLSConfig `yaml:"tls"`
+	ListenAddr string    `yaml:"listen_addr"`
+	TargetAddr string    `yaml:"target_addr"`
+	TLS        TLSConfig `yaml:"tls"`
 }
 
 type TLSConfig struct {
@@ -23,8 +19,8 @@ type TLSConfig struct {
 	CACertFile string `yaml:"ca_cert_file"`
 }
 
-func LoadConfig() (*Config, error) {
-	data, err := os.ReadFile(configFile)
+func LoadConfig(configFilePath string) (*Config, error) {
+	configFile, err := os.Open(configFilePath)
 
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't read config yaml file")
@@ -32,10 +28,9 @@ func LoadConfig() (*Config, error) {
 
 	var cfg Config
 
-	err = yaml.Unmarshal(data, &cfg)
-
-	if err != nil {
-		return nil, fmt.Errorf("Unable to marshal yaml file data")
+	decoder := yaml.NewDecoder(configFile)
+	if err := decoder.Decode(&cfg); err != nil {
+		return nil, fmt.Errorf("Critical Error: Failed parsing config file")
 	}
 
 	return &cfg, nil
