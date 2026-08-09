@@ -40,10 +40,10 @@ func Start(cfg *config.Config) error {
 func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 	defer clientConn.Close()
 
-	backendConn, err := net.Dial("tcp", cfg.BackendAddr)
+	backendConn, err := net.Dial("tcp", cfg.TargetAddr)
 
 	if err != nil {
-		log.Fatalf("Failed to reach backend app at %s : %v", cfg.BackendAddr, err)
+		log.Fatalf("Failed to reach backend app at %s : %v", cfg.TargetAddr, err)
 		return
 	}
 
