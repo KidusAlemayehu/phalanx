@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  # Dummy Backend 1
+  service1:
+    image: hashicorp/http-echo
+    command: -text="Hello from Service 1" -listen=:8081
+    ports:
+      - "8081:8081"
+
+  # Dummy Backend 2
+  service2:
+    image: hashicorp/http-echo
+    command: -text="Hello from Service 2" -listen=:8082
+    ports:
+      - "8082:8082"

@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	ListenAddr string    `yaml:"listen_addr"`
-	TargetAddr string    `yaml:"target_addr"`
-	TLS        TLSConfig `yaml:"tls"`
+	ListenAddr string            `yaml:"listen_addr"`
+	Services   map[string]string `yaml:"services"`
+	TLS        TLSConfig         `yaml:"tls"`
 }
 
 type TLSConfig struct {

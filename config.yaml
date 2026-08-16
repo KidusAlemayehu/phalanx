@@ -1,0 +1,8 @@
+listen_addr: ":8443"
+backends:
+  "service1.local": "localhost:8081"
+  "service2.local": "localhost:8082"
+tls:
+  cert_file: "./certs/server.crt"
+  key_file: "./certs/server.key"
+  ca_cert_file: "./certs/ca.crt"

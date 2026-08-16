@@ -40,10 +40,28 @@ func Start(cfg *config.Config) error {
 func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 	defer clientConn.Close()
 
-	backendConn, err := net.Dial("tcp", cfg.TargetAddr)
+	tlsConn, ok := clientConn.(*tls.Conn)
+	if !ok {
+		log.Printf("Expected a TLS connection")
+		return
+	}
+
+	if err := tlsConn.Handshake(); err != nil {
+		log.Printf("TLS handshake failed: %v", err)
+		return
+	}
+
+	serverName := tlsConn.ConnectionState().ServerName
+	serviceAddr, ok := cfg.Services[serverName]
+	if !ok {
+		log.Printf("No backend found for SNI: %s", serverName)
+		return
+	}
+
+	backendConn, err := net.Dial("tcp", serviceAddr)
 
 	if err != nil {
-		log.Fatalf("Failed to reach backend app at %s : %v", cfg.TargetAddr, err)
+		log.Printf("Failed to reach backend app for SNI %s at %s: %v", serverName, serviceAddr, err)
 		return
 	}
 
@@ -52,22 +70,21 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 	done := make(chan struct{}, 2)
 
 	go func() {
-		_, err := io.Copy(backendConn, clientConn)
+		_, err := io.Copy(backendConn, tlsConn)
 		if err != nil {
 			log.Printf("stream connection to backend error %v", err)
 		}
-
 		done <- struct{}{}
 	}()
 
 	go func() {
-		_, err := io.Copy(clientConn, backendConn)
+		_, err := io.Copy(tlsConn, backendConn)
 
 		if err != nil {
 			log.Printf("stream connection to client error %v", err)
 		}
-
 		done <- struct{}{}
 	}()
 
+	<-done
 }
