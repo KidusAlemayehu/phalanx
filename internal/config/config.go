@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	ListenAddr string            `yaml:"listen_addr"`
-	Backends   map[string]string `yaml:"backends"`
+	Services   map[string]string `yaml:"services"`
 	TLS        TLSConfig         `yaml:"tls"`
 }
 

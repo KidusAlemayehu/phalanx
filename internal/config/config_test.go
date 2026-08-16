@@ -10,7 +10,7 @@ func TestLoadConfig(t *testing.T) {
 	// Create a temporary YAML file for testing
 	yamlContent := `
 listen_addr: ":8443"
-backends:
+services:
   "service1.local": "localhost:8081"
   "service2.local": "localhost:8082"
 tls:
@@ -47,8 +47,8 @@ tls:
 		"service2.local": "localhost:8082",
 	}
 
-	if !reflect.DeepEqual(cfg.Backends, expectedBackends) {
-		t.Errorf("Expected Backends %v, got %v", expectedBackends, cfg.Backends)
+	if !reflect.DeepEqual(cfg.Services, expectedBackends) {
+		t.Errorf("Expected Backends %v, got %v", expectedBackends, cfg.Services)
 	}
 
 	if cfg.TLS.CertFile != "certs/server.crt" {

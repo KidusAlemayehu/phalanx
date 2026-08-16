@@ -52,16 +52,16 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 	}
 
 	serverName := tlsConn.ConnectionState().ServerName
-	targetAddr, ok := cfg.Backends[serverName]
+	serviceAddr, ok := cfg.Services[serverName]
 	if !ok {
 		log.Printf("No backend found for SNI: %s", serverName)
 		return
 	}
 
-	backendConn, err := net.Dial("tcp", targetAddr)
+	backendConn, err := net.Dial("tcp", serviceAddr)
 
 	if err != nil {
-		log.Printf("Failed to reach backend app for SNI %s at %s: %v", serverName, targetAddr, err)
+		log.Printf("Failed to reach backend app for SNI %s at %s: %v", serverName, serviceAddr, err)
 		return
 	}
 
@@ -74,8 +74,6 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 		if err != nil {
 			log.Printf("stream connection to backend error %v", err)
 		}
-		tlsConn.Close()
-		backendConn.Close()
 		done <- struct{}{}
 	}()
 
@@ -85,11 +83,8 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 		if err != nil {
 			log.Printf("stream connection to client error %v", err)
 		}
-		tlsConn.Close()
-		backendConn.Close()
 		done <- struct{}{}
 	}()
 
-	<-done
 	<-done
 }

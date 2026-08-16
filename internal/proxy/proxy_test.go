@@ -101,7 +101,7 @@ func TestProxyRouting(t *testing.T) {
 	proxyAddr := "127.0.0.1:0" // Pick free port
 	cfg := &config.Config{
 		ListenAddr: proxyAddr,
-		Backends: map[string]string{
+		Services: map[string]string{
 			"service1.local": backend1Addr,
 			"service2.local": backend2Addr,
 		},
