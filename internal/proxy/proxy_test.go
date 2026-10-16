@@ -20,20 +20,20 @@ import (
 func generateCerts(t *testing.T, dir string) {
 	// Simple bash script to generate certs using openssl
 	script := `
-#!/bin/bash
-cd ` + dir + `
+		#!/bin/bash
+		cd ` + dir + `
 
-# CA
-openssl req -x509 -nodes -newkey rsa:2048 -days 1 -keyout ca.key -out ca.crt -subj "/CN=Test CA"
+		# CA
+		openssl req -x509 -nodes -newkey rsa:2048 -days 1 -keyout ca.key -out ca.crt -subj "/CN=Test CA"
 
-# Server
-openssl req -newkey rsa:2048 -nodes -keyout server.key -out server.csr -subj "/CN=server"
-openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 1 -extfile <(printf "subjectAltName=DNS:service1.local,DNS:service2.local")
+		# Server
+		openssl req -newkey rsa:2048 -nodes -keyout server.key -out server.csr -subj "/CN=server"
+		openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 1 -extfile <(printf "subjectAltName=DNS:service1.local,DNS:service2.local")
 
-# Client
-openssl req -newkey rsa:2048 -nodes -keyout client.key -out client.csr -subj "/CN=client"
-openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 1
-`
+		# Client
+		openssl req -newkey rsa:2048 -nodes -keyout client.key -out client.csr -subj "/CN=client"
+		openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 1
+		`
 	scriptPath := filepath.Join(dir, "gen.sh")
 	err := os.WriteFile(scriptPath, []byte(script), 0755)
 	if err != nil {
