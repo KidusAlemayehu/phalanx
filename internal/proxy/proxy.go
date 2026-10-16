@@ -6,9 +6,15 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 
 	"github.com/KidusAlemayehu/phalanx/internal/cert"
 	"github.com/KidusAlemayehu/phalanx/internal/config"
+)
+
+const (
+	defaultHandshaketimeout = 10 * time.Second
+	defaultDialTimeout      = 5 * time.Second
 )
 
 func Start(cfg *config.Config) error {
@@ -46,8 +52,18 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 		return
 	}
 
+	if err := clientConn.SetDeadline(time.Now().Add(defaultHandshaketimeout)); err != nil {
+		log.Printf("Failed to set deadline for TLS handshake: %v", err)
+		return
+	}
+
 	if err := tlsConn.Handshake(); err != nil {
 		log.Printf("TLS handshake failed: %v", err)
+		return
+	}
+
+	if err := clientConn.SetDeadline(time.Time{}); err != nil {
+		log.Printf("Failed to reset deadline after TLS handshake: %v", err)
 		return
 	}
 
@@ -58,7 +74,7 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 		return
 	}
 
-	backendConn, err := net.Dial("tcp", serviceAddr)
+	backendConn, err := net.DialTimeout("tcp", serviceAddr, defaultDialTimeout)
 
 	if err != nil {
 		log.Printf("Failed to reach backend app for SNI %s at %s: %v", serverName, serviceAddr, err)
@@ -72,7 +88,9 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 	go func() {
 		_, err := io.Copy(backendConn, tlsConn)
 		if err != nil {
-			log.Printf("stream connection to backend error %v", err)
+			if !isExpectedCloseError(err) {
+				log.Printf("stream connection to backend error %v", err)
+			}
 		}
 		done <- struct{}{}
 	}()
@@ -87,4 +105,20 @@ func handleTCPConnection(clientConn net.Conn, cfg *config.Config) {
 	}()
 
 	<-done
+}
+
+func isExpectedCloseError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+		return true
+	}
+
+	if err == io.EOF {
+		return true
+	}
+
+	return false
 }
